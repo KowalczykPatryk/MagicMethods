@@ -4,17 +4,21 @@ This module is a container for Vector class.
 
 from __future__ import annotations
 import struct
+from collections.abc import Iterator
+from typing import Sequence
 
 class Vector:
     """
     Represents a mathematical vector.
     """
     _precision: int = 5
-    def __init__(self, init_list: list) -> None:
-        if not init_list:
+    def __init__(self, init_list: list, n_dimentions: int) -> None:
+        if n_dimentions <= 0:
             raise ValueError
         self._vector: list = init_list
-        self._n_dimentions: int = len(self._vector)
+        for i in range(len(init_list),n_dimentions):
+            self._vector[i] = 0
+        self._n_dimentions: int = n_dimentions
 
     def __repr__(self) -> str:
         return f"Vector({self._vector})"
@@ -60,15 +64,19 @@ class Vector:
         return any(self._vector)
 
     def __int__(self) -> int:
-        return NotImplemented
+        if self._n_dimentions == 1:
+            return int(self._vector)
+        raise TypeError("Cannot convert multidimentional Vector to int")
 
     def __float__(self) -> float:
-        return NotImplemented
+        if self._n_dimentions == 1:
+            return float(self._vector)
+        raise TypeError("Cannot convert multidimentional Vector to float")
 
     def __bytes__(self) -> bytes:
         return struct.pack("I", self._n_dimentions)+"".join(struct.pack("d", v) for v in self._vector).encode()
 
-    def __complex__(self) ->complex:
+    def __complex__(self) -> complex:
         return NotImplemented
 
     def __format__(self, spec: str) -> str:
@@ -87,7 +95,7 @@ class Vector:
             self._vector_object._precision = self._precision
             return self._vector_object
 
-        def __exit__(self, exc_type, exc, traceback) -> None:
+        def __exit__(self, exc_type, exc, traceback) -> bool:
             self._vector_object._precision = self._old_precision
 
     def precision(self, precision: int) -> _PrecisionContext:
@@ -102,3 +110,75 @@ class Vector:
         """
         return self._PrecisionContext(self, precision)
 
+    def __len__(self) -> int:
+        return self._n_dimentions
+
+    class _VectorIterator(Iterator[float]):
+        def __init__(self, vector: Sequence[float]) -> None:
+            self.current_index = 0
+            self.vector = vector
+
+        def __iter__(self) -> Vector._VectorIterator:
+            return self
+
+        def __next__(self) -> float:
+            current = self.current_index
+            self.current_index += 1
+            if current >= len(self.vector):
+                raise StopIteration
+            return self.vector[current]
+
+        def __length_hint__(self):
+            return len(self.vector) - self.current_index
+
+    def __iter__(self) -> _VectorIterator:
+        """
+        This could be also implemented using build-in function that creates iterator:
+            def __iter__(self):
+                return iter(self._values)
+        or using generator that creates iterator using yield:
+            def __iter__(self):
+                for x in self._values:
+                    yield x
+
+        
+        :param self: Description
+        :return: Description
+        :rtype: VectorIterator
+        """
+        return self._VectorIterator(self._vector)
+
+    def __getitem__(self, index: int | slice) -> float | Vector:
+        result = self._vector[index]
+        if isinstance(index, slice):
+            return Vector(result, len(result))
+        return result
+
+    def __setitem__(self, index: int | slice, value: float | list) -> None:
+        if isinstance(index, slice):
+            if len(value) != len(self._vector[index]):
+                raise ValueError("Vector dimention change")
+        self._vector[index] = value
+
+    def __delitem__(self, index: int | slice) -> None:
+        raise TypeError("Vector size cannot be changed")
+
+    def __contains__(self, value: float) -> bool:
+        return value in self._vector
+
+    def __reversed__(self) -> Iterator[float]:
+        return reversed(self._vector)
+
+    def __call__(self, other: Vector) -> float:
+        """
+        Docstring for __call__
+        
+        :param self: 
+        :param other: other vector of the same dimention
+        :type other: Vector
+        :return: Dot product of two vectors
+        :rtype: float
+        """
+        if self._n_dimentions != other._n_dimentions:
+            raise ValueError
+        return sum(a*b for a, b in zip(self._vector, other._vector))
