@@ -6,6 +6,7 @@ from __future__ import annotations
 import struct
 from collections.abc import Iterator
 from typing import Sequence
+from matrix import Matrix
 
 class Vector:
     """
@@ -171,7 +172,7 @@ class Vector:
 
     def __call__(self, other: Vector) -> float:
         """
-        Docstring for __call__
+        Implementation of __call__ magic method for Vector class
         
         :param self: 
         :param other: other vector of the same dimention
@@ -182,3 +183,69 @@ class Vector:
         if self._n_dimentions != other._n_dimentions:
             raise ValueError
         return sum(a*b for a, b in zip(self._vector, other._vector))
+
+    def __add__(self, other: Vector) -> Vector:
+        if self._n_dimentions != other._n_dimentions:
+            raise ValueError("Vector dimention mismatch")
+        return Vector([a+b for a, b in zip(self._vector, other._vector)], self._n_dimentions)
+
+    def __sub__(self, other: Vector) -> Vector:
+        if self._n_dimentions != other._n_dimentions:
+            raise ValueError("Vector dimention mismatch")
+        return Vector([a-b for a, b in zip(self._vector, other._vector)], self._n_dimentions)
+
+    def __mul__(self, other: Vector | int | float | Matrix) -> Vector:
+        """
+        For multiplication with Vector the result is cross product 
+        of two vectors which exists only in 3D.
+        
+        :param self: Description
+        :param other: right side operand
+        :type other: Vector | int | float | Matrix
+        :return: Result of multiplying vector with other variables of other type
+        :rtype: Vector
+        """
+        if isinstance(other, Vector):
+            if self._n_dimentions == other._n_dimentions and self._n_dimentions == 3:
+                a1, a2, a3 = self._vector
+                b1, b2, b3 = other._vector
+                return Vector([a2*b3-a3*b2, a3*b1-a1*b3, a1*b2-a2*b1], self._n_dimentions)
+            raise ValueError
+        if isinstance(other, (int, float)):
+            return Vector([v*other for v in self._vector], self._n_dimentions)
+        if isinstance(other, Matrix):
+            vector_list = []
+            for i in range(other._n_columns):
+                vector_list[i] = sum(a*b for a, b in zip(self._vector, other.column[i]))
+            return Vector(vector_list, len(vector_list))
+        return NotImplemented
+
+    def __rmul__(self, other: Vector | int | float | Matrix) -> Vector:
+        if isinstance(other, (int, float)):
+            return self * other
+        return NotImplemented
+
+    def __truediv__(self, divisor: int | float) -> Vector:
+        if not isinstance(divisor, (int, float)):
+            return NotImplemented
+        if divisor == 0:
+            raise ZeroDivisionError
+        return Vector([v/divisor for v in self._vector], self._n_dimentions)
+
+    def __mod__(self, divisor: int | float) -> Vector:
+        if not isinstance(divisor, (int, float)):
+            return NotImplemented
+        if divisor == 0:
+            raise ZeroDivisionError
+        return Vector([v%divisor for v in self._vector], self._n_dimentions)
+
+    def __floordiv__(self, divisor: int | float) -> Vector:
+        if not isinstance(divisor, (int, float)):
+            return NotImplemented
+        if divisor == 0:
+            raise ZeroDivisionError
+        return Vector([v//divisor for v in self._vector], self._n_dimentions)
+
+    def __pow__(self, power: int) -> Vector:
+        return Vector([v**power for v in self._vector], self._n_dimentions)
+    
