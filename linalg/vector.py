@@ -190,15 +190,21 @@ class Vector:
             raise ValueError
         return sum(a*b for a, b in zip(self._vector, other._vector))
 
-    def __add__(self, other: Vector) -> Vector:
-        if self._n_dimentions != other._n_dimentions:
-            raise ValueError("Vector dimention mismatch")
-        return Vector([a+b for a, b in zip(self._vector, other._vector)], self._n_dimentions)
+    def __add__(self, other: Vector | int | float) -> Vector:
+        if isinstance(other, Vector):
+            if self._n_dimentions != other._n_dimentions:
+                raise ValueError("Vector dimention mismatch")
+            return Vector([a+b for a, b in zip(self._vector, other._vector)], self._n_dimentions)
+        if isinstance(other, (int, float)):
+            return Vector([v + other for v in self._vector], self._n_dimentions)
 
-    def __sub__(self, other: Vector) -> Vector:
-        if self._n_dimentions != other._n_dimentions:
-            raise ValueError("Vector dimention mismatch")
-        return Vector([a-b for a, b in zip(self._vector, other._vector)], self._n_dimentions)
+    def __sub__(self, other: Vector | int | float) -> Vector:
+        if isinstance(other, Vector):
+            if self._n_dimentions != other._n_dimentions:
+                raise ValueError("Vector dimention mismatch")
+            return Vector([a-b for a, b in zip(self._vector, other._vector)], self._n_dimentions)
+        if isinstance(other, (int, float)):
+            return Vector([v - other for v in self._vector], self._n_dimentions)
 
     def __mul__(self, other: Vector | int | float | Matrix) -> Vector:
         """
@@ -307,3 +313,101 @@ class Vector:
         if isinstance(other, int):
             return Vector([v << other for v in self._vector], self._n_dimentions)
         return NotImplemented
+
+    def __neg__(self) -> Vector:
+        return Vector([-v for v in self._vector], self._n_dimentions)
+
+    def __pos__(self) -> Vector:
+        return Vector(self._vector.copy(), self._n_dimentions)
+
+    def __invert__(self) -> Vector:
+        return Vector([~v for v in self._vector], self._n_dimentions)
+
+    def __iadd__(self, other: Vector | int | float) -> Vector:
+        if isinstance(other, Vector):
+            if self._n_dimentions == other._n_dimentions:
+                for i, _ in enumerate(self._vector):
+                    self._vector[i] += other._vector[i]
+                return self
+            raise ValueError
+        if isinstance(other, (int, float)):
+            for i, _ in enumerate(self._vector):
+                self._vector[i] += other
+            return self
+        raise ValueError
+
+    def __isub__(self, other: Vector | int | float) -> Vector:
+        if isinstance(other, Vector):
+            if self._n_dimentions == other._n_dimentions:
+                for i, _ in enumerate(self._vector):
+                    self._vector[i] -= other._vector[i]
+                return self
+            raise ValueError
+        if isinstance(other, (int, float)):
+            for i, _ in enumerate(self._vector):
+                self._vector[i] -= other
+            return self
+        raise ValueError
+
+    def __imul__(self, other: int | float) -> Vector:
+        if isinstance(other, (int | float)):
+            for i, _ in enumerate(self._vector):
+                self._vector[i] *= other
+        raise ValueError
+
+    def __itruediv__(self, other: int | float) -> Vector:
+        if isinstance(other, (int | float)):
+            if other != 0:
+                for i, _ in enumerate(self._vector):
+                    self._vector[i] /= other
+        raise ValueError
+
+    def __imod__(self, other: int | float) -> Vector:
+        if isinstance(other, (int | float)):
+            if other != 0:
+                for i, _ in enumerate(self._vector):
+                    self._vector[i] %= other
+        raise ValueError
+
+    def __ifloordiv__(self, other: int | float) -> Vector:
+        if isinstance(other, (int | float)):
+            if other != 0:
+                for i, _ in enumerate(self._vector):
+                    self._vector[i] //= other
+        raise ValueError
+
+    def __ipow__(self, other: int | float) -> Vector:
+        if isinstance(other, (int | float)):
+            for i, _ in enumerate(self._vector):
+                self._vector[i] **= other
+        raise ValueError
+
+    def __iand__(self, other: int) -> Vector:
+        if isinstance(other, int):
+            for i, _ in enumerate(self._vector):
+                self._vector[i] &= other
+        raise ValueError
+
+    def __ior__(self, other: int) -> Vector:
+        if isinstance(other, int):
+            for i, _ in enumerate(self._vector):
+                self._vector[i] |= other
+        raise ValueError
+
+    def __ixor__(self, other: int) -> Vector:
+        if isinstance(other, int):
+            for i, _ in enumerate(self._vector):
+                self._vector[i] ^= other
+        raise ValueError
+
+    def __irshift__(self, other: int) -> Vector:
+        if isinstance(other, int):
+            for i, _ in enumerate(self._vector):
+                self._vector[i] >>= other
+        raise ValueError
+
+    def __ilshift__(self, other: int) -> Vector:
+        if isinstance(other, int):
+            for i, _ in enumerate(self._vector):
+                self._vector[i] <<= other
+        raise ValueError
