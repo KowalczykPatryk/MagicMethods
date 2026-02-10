@@ -8,16 +8,18 @@ from collections.abc import Iterator
 from typing import Sequence
 from matrix import Matrix
 
+
 class Vector:
     """
     Represents a mathematical vector.
     """
     _precision: int = 5
+
     def __init__(self, init_list: list, n_dimentions: int) -> None:
         if n_dimentions <= 0:
             raise ValueError
         self._vector: list = init_list
-        for i in range(len(init_list),n_dimentions):
+        for i in range(len(init_list), n_dimentions):
             self._vector[i] = 0
         self._n_dimentions: int = n_dimentions
 
@@ -59,7 +61,9 @@ class Vector:
         return not self.__le__(other)
 
     def __str__(self) -> str:
-        return f"Vector {self._vector} has {self._n_dimentions} {"dimention" if self._n_dimentions == 1 else "dimentions"}"
+        return f"Vector {self._vector} has {self._n_dimentions} {
+            "dimention" if self._n_dimentions == 1 else "dimentions"
+        }"
 
     def __bool__(self) -> bool:
         return any(self._vector)
@@ -75,7 +79,9 @@ class Vector:
         raise TypeError("Cannot convert multidimentional Vector to float")
 
     def __bytes__(self) -> bytes:
-        return struct.pack("I", self._n_dimentions)+"".join(struct.pack("d", v) for v in self._vector).encode()
+        return struct.pack(
+            "I", self._n_dimentions
+        )+"".join(struct.pack("d", v) for v in self._vector).encode()
 
     def __complex__(self) -> complex:
         return NotImplemented
@@ -102,7 +108,7 @@ class Vector:
     def precision(self, precision: int) -> _PrecisionContext:
         """
         Docstring for precision
-        
+
         :param self: This instance of the class Vector.
         :param precision: Precision for each number stored inside Vector.
         :type precision: int
@@ -142,7 +148,7 @@ class Vector:
                 for x in self._values:
                     yield x
 
-        
+
         :param self: Description
         :return: Description
         :rtype: VectorIterator
@@ -173,7 +179,7 @@ class Vector:
     def __call__(self, other: Vector) -> float:
         """
         Implementation of __call__ magic method for Vector class
-        
+
         :param self: 
         :param other: other vector of the same dimention
         :type other: Vector
@@ -198,7 +204,7 @@ class Vector:
         """
         For multiplication with Vector the result is cross product 
         of two vectors which exists only in 3D.
-        
+
         :param self: Description
         :param other: right side operand
         :type other: Vector | int | float | Matrix
@@ -216,7 +222,8 @@ class Vector:
         if isinstance(other, Matrix):
             vector_list = []
             for i in range(other._n_columns):
-                vector_list[i] = sum(a*b for a, b in zip(self._vector, other.column[i]))
+                vector_list[i] = sum(
+                    a*b for a, b in zip(self._vector, other.column[i]))
             return Vector(vector_list, len(vector_list))
         return NotImplemented
 
@@ -237,7 +244,7 @@ class Vector:
             return NotImplemented
         if divisor == 0:
             raise ZeroDivisionError
-        return Vector([v%divisor for v in self._vector], self._n_dimentions)
+        return Vector([v % divisor for v in self._vector], self._n_dimentions)
 
     def __floordiv__(self, divisor: int | float) -> Vector:
         if not isinstance(divisor, (int, float)):
@@ -248,4 +255,55 @@ class Vector:
 
     def __pow__(self, power: int) -> Vector:
         return Vector([v**power for v in self._vector], self._n_dimentions)
-    
+
+    def __and__(self, other: Vector | int) -> Vector:
+        if isinstance(other, Vector):
+            if self._n_dimentions == other._n_dimentions:
+                return Vector(
+                    [a & b for a, b in zip(self._vector, other._vector)], self._n_dimentions
+                )
+            raise ValueError
+        if isinstance(other, int):
+            return Vector([v & other for v in self._vector], self._n_dimentions)
+        return NotImplemented
+
+    def __rand__(self, other: int) -> Vector:
+        return self.__and__(other)
+
+    def __or__(self, other: Vector | int) -> Vector:
+        if isinstance(other, Vector):
+            if self._n_dimentions == other._n_dimentions:
+                return Vector(
+                    [a | b for a, b in zip(self._vector, other._vector)], self._n_dimentions
+                )
+            raise ValueError
+        if isinstance(other, int):
+            return Vector([v | other for v in self._vector], self._n_dimentions)
+        return NotImplemented
+
+    def __ror__(self, other: int) -> Vector:
+        return self.__or__(other)
+
+    def __xor__(self, other: Vector | int) -> Vector:
+        if isinstance(other, Vector):
+            if self._n_dimentions == other._n_dimentions:
+                return Vector(
+                    [a ^ b for a, b in zip(self._vector, other._vector)], self._n_dimentions
+                )
+            raise ValueError
+        if isinstance(other, int):
+            return Vector([v ^ other for v in self._vector], self._n_dimentions)
+        return NotImplemented
+
+    def __rxor__(self, other: int) -> Vector:
+        return self.__xor__(other)
+
+    def __rshift__(self, other: int) -> Vector:
+        if isinstance(other, int):
+            return Vector([v >> other for v in self._vector], self._n_dimentions)
+        return NotImplemented
+
+    def __lshift__(self, other: int) -> Vector:
+        if isinstance(other, int):
+            return Vector([v << other for v in self._vector], self._n_dimentions)
+        return NotImplemented
