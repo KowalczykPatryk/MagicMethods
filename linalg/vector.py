@@ -5,7 +5,7 @@ This module is a container for Vector class.
 from __future__ import annotations
 import struct
 from collections.abc import Iterator
-from typing import Sequence
+from typing import Sequence, Any
 from matrix import Matrix
 
 
@@ -411,3 +411,25 @@ class Vector:
             for i, _ in enumerate(self._vector):
                 self._vector[i] <<= other
         raise ValueError
+
+    def __getattribute__(self, name: str) -> Any:
+        return object.__getattribute__(self, name)
+
+    def __getattr__(self, name: str) -> Any:
+        mapping = {"x": 0, "y": 1, "z": 2}
+        if name in mapping:
+            return self._vector[mapping[name]]
+        raise AttributeError(name)
+
+    def __setattr__(self, name: str, value) -> None:
+        if name == "_n_dimentions":
+            raise AttributeError("read only attribute")
+        object.__setattr__(self, name, value)
+
+    def __delattr__(self, name: str) -> None:
+        if name == "_vector":
+            raise AttributeError("cannot delete core data")
+        object.__delattr__(self, name)
+
+    def __dir__(self) -> list[str]:
+        return super().__dir__() + ["x", "y", "z"]
