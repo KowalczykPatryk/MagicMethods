@@ -13,7 +13,31 @@ class Vector:
     """
     Represents a mathematical vector.
     """
-    _precision: int = 5
+    class Precision:
+        """
+        Inner class that represents python descriptor.
+        """
+        def __init__(self, default: int | None = None):
+            self.default: int | None = default
+            self.name = None
+
+        def __set_name__(self, owner, name):
+            self.name = name
+
+        def __get__(self, instance, owner) -> int:
+            if instance is None:
+                return self
+            return instance.__dict__.get(self.name, self.default or 0)
+
+        def __set__(self, instance, value) -> None:
+            if not 0 <= value <= 9:
+                raise ValueError("precision must be in [0, 9]")
+            instance.__dict__[self.name] = value
+
+        def __delete__(self, instance) -> None:
+            instance.__dict__[self.name] = self.default or 0
+
+    _precision: Precision = Precision()
 
     def __init__(self, init_list: list, n_dimentions: int) -> None:
         if n_dimentions <= 0:
@@ -197,6 +221,7 @@ class Vector:
             return Vector([a+b for a, b in zip(self._vector, other._vector)], self._n_dimentions)
         if isinstance(other, (int, float)):
             return Vector([v + other for v in self._vector], self._n_dimentions)
+        raise ValueError
 
     def __sub__(self, other: Vector | int | float) -> Vector:
         if isinstance(other, Vector):
@@ -205,6 +230,7 @@ class Vector:
             return Vector([a-b for a, b in zip(self._vector, other._vector)], self._n_dimentions)
         if isinstance(other, (int, float)):
             return Vector([v - other for v in self._vector], self._n_dimentions)
+        raise ValueError
 
     def __mul__(self, other: Vector | int | float | Matrix) -> Vector:
         """

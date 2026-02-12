@@ -6,3 +6,4 @@ https://www.pythonmorsels.com/every-dunder-method/
 https://www.pythonmorsels.com/when-to-use-notimplemented/
 https://www.geeksforgeeks.org/maths/vector-norms/
 https://docs.python.org/3/library/struct.html
+https://realpython.com/python-descriptors/
