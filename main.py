@@ -1,4 +1,11 @@
-from linalg import vector_buffer
+from linalg import vector_buffer, Vector
+import asyncio
+
+async def main():
+    async with Vector():
+        print("inside")
+
+asyncio.run(main())
 
 
 if __name__ == "__main__":

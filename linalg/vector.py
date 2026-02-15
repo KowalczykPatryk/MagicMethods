@@ -6,6 +6,7 @@ from __future__ import annotations
 import struct
 from collections.abc import Iterator
 from typing import Sequence, Any
+import asyncio
 from matrix import Matrix
 
 
@@ -459,3 +460,35 @@ class Vector:
 
     def __dir__(self) -> list[str]:
         return super().__dir__() + ["x", "y", "z"]
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        pass
+
+    class _AsyncVectorIter:
+        def __init__(self, vector: Sequence[float], n_dimentions: int) -> None:
+            self._n_dimentions = n_dimentions
+            self._vector = vector
+            self._i = 0
+
+        def __aiter__(self) -> Vector._AsyncVectorIter:
+            return self
+
+        async def __anext__(self) -> float:
+            if self._i >= self._n_dimentions:
+                raise StopAsyncIteration
+
+            await asyncio.sleep(0)
+            value = self._vector[self._i]
+            self._i += 1
+            return value
+
+    def __aiter__(self) -> _AsyncVectorIter:
+        return self._AsyncVectorIter(self._vector, self._n_dimentions)
+
+    def __await__(self):
+        async def _wrap():
+            return self
+        return _wrap().__await__()
