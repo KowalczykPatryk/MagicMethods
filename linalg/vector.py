@@ -7,7 +7,7 @@ import struct
 from collections.abc import Iterator
 from typing import Sequence, Any
 import asyncio
-from matrix import Matrix
+from .matrix import Matrix
 
 
 class Vector:
@@ -40,10 +40,10 @@ class Vector:
 
     _precision: Precision = Precision()
 
-    def __init__(self, init_list: list, n_dimentions: int) -> None:
+    def __init__(self, init_list: list[float], n_dimentions: int) -> None:
         if n_dimentions <= 0:
             raise ValueError
-        self._vector: list = init_list
+        self._vector: list[float] = init_list
         for i in range(len(init_list), n_dimentions):
             self._vector[i] = 0
         self._n_dimentions: int = n_dimentions
@@ -86,9 +86,10 @@ class Vector:
         return not self.__le__(other)
 
     def __str__(self) -> str:
-        return f"Vector {self._vector} has {self._n_dimentions} {
-            "dimention" if self._n_dimentions == 1 else "dimentions"
-        }"
+        return (
+            f"Vector {self._vector} has {self._n_dimentions}"
+            f"{'dimention' if self._n_dimentions == 1 else 'dimentions'}"
+        )
 
     def __bool__(self) -> bool:
         return any(self._vector)
@@ -104,9 +105,10 @@ class Vector:
         raise TypeError("Cannot convert multidimentional Vector to float")
 
     def __bytes__(self) -> bytes:
-        return struct.pack(
-            "I", self._n_dimentions
-        )+"".join(struct.pack("d", v) for v in self._vector).encode()
+        return (
+            struct.pack("I", self._n_dimentions)+
+            "".join(struct.pack("d", v) for v in self._vector).encode()
+        )
 
     def __complex__(self) -> complex:
         return NotImplemented
@@ -186,7 +188,7 @@ class Vector:
             return Vector(result, len(result))
         return result
 
-    def __setitem__(self, index: int | slice, value: float | list) -> None:
+    def __setitem__(self, index: int | slice, value: float | list[float]) -> None:
         if isinstance(index, slice):
             if len(value) != len(self._vector[index]):
                 raise ValueError("Vector dimention change")

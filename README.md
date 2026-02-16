@@ -9,3 +9,4 @@ https://docs.python.org/3/library/struct.html
 https://realpython.com/python-descriptors/
 https://realpython.com/build-python-c-extension-module/
 https://docs.python.org/3/c-api/buffer.html
+https://en.wikipedia.org/wiki/Matrix_norm
