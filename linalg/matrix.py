@@ -7,6 +7,7 @@ import struct
 from collections.abc import Iterator
 from typing import Sequence, Any
 import asyncio
+import copy
 from .vector import Vector
 
 
@@ -50,6 +51,7 @@ class Matrix:
                 self._matrix[i][j] = 0
         self._n_rows: int = n_rows
         self._n_cols: int = n_cols
+        self._shape: tuple = (n_rows, n_cols)
 
     def __repr__(self) -> str:
         matrix_str = ""
@@ -320,113 +322,175 @@ class Matrix:
 
     def __mul__(self, other: Vector | int | float | Matrix) -> Vector | Matrix:
         if isinstance(other, Vector):
-            if self._n_dimentions == other._n_dimentions and self._n_dimentions == 3:
-                a1, a2, a3 = self._vector
-                b1, b2, b3 = other._vector
-                return Vector([a2*b3-a3*b2, a3*b1-a1*b3, a1*b2-a2*b1], self._n_dimentions)
-            raise ValueError
+            if other._n_dimentions != self._n_cols:
+                raise ValueError("Dimension mismatch")
+
+            result = []
+            for row in self._matrix:
+                result.append(sum(a * b for a, b in zip(row, other)))
+
+            return Vector(result, len(result))
         if isinstance(other, (int, float)):
-            return Vector([v*other for v in self._vector], self._n_dimentions)
+            return Matrix(
+                [[v*other for v in row] for row in self._matrix], self._n_rows, self._n_cols
+            )
         if isinstance(other, Matrix):
-            vector_list = []
-            for i in range(other._n_columns):
-                vector_list[i] = sum(
-                    a*b for a, b in zip(self._vector, other.column[i]))
-            return Vector(vector_list, len(vector_list))
+            if self._n_cols != other._n_rows:
+                raise ValueError("Dimension mismatch")
+
+            other_cols = list(zip(*other._matrix))
+
+            return Matrix([
+                [sum(a*b for a,b in zip(row, col)) for col in other_cols]
+                for row in self._matrix
+            ],
+            self._n_rows,
+            other._n_cols
+            )
         return NotImplemented
 
-    def __rmul__(self, other: Vector | int | float | Matrix) -> Vector:
-        if isinstance(other, (int, float)):
+    def __rmul__(self, other: Vector | int | float | Matrix) -> Vector | Matrix:
+        if isinstance(other, (int, float, Vector, Matrix)):
             return self * other
         return NotImplemented
 
-    def __truediv__(self, divisor: int | float) -> Vector:
+    def __truediv__(self, divisor: int | float) -> Matrix:
         if not isinstance(divisor, (int, float)):
             return NotImplemented
         if divisor == 0:
             raise ZeroDivisionError
-        return Vector([v/divisor for v in self._vector], self._n_dimentions)
+        return Matrix(
+            [[v/divisor for v in row] for row in self._matrix],
+            self._n_rows,
+            self._n_cols
+        )
 
-    def __mod__(self, divisor: int | float) -> Vector:
+    def __mod__(self, divisor: int | float) -> Matrix:
         if not isinstance(divisor, (int, float)):
             return NotImplemented
         if divisor == 0:
             raise ZeroDivisionError
-        return Vector([v % divisor for v in self._vector], self._n_dimentions)
+        return Matrix(
+            [[v%divisor for v in row] for row in self._matrix],
+            self._n_rows,
+            self._n_cols
+        )
 
-    def __floordiv__(self, divisor: int | float) -> Vector:
+    def __floordiv__(self, divisor: int | float) -> Matrix:
         if not isinstance(divisor, (int, float)):
             return NotImplemented
         if divisor == 0:
             raise ZeroDivisionError
-        return Vector([v//divisor for v in self._vector], self._n_dimentions)
+        return Matrix(
+            [[v//divisor for v in row] for row in self._matrix],
+            self._n_rows,
+            self._n_cols
+        )
 
-    def __pow__(self, power: int) -> Vector:
-        return Vector([v**power for v in self._vector], self._n_dimentions)
+    def __pow__(self, power: int) -> Matrix:
+        return Matrix(
+            [[v**power for v in row] for row in self._matrix],
+            self._n_rows,
+            self._n_cols
+        )
 
-    def __and__(self, other: Vector | int) -> Vector:
-        if isinstance(other, Vector):
-            if self._n_dimentions == other._n_dimentions:
-                return Vector(
-                    [a & b for a, b in zip(
-                        self._vector, other._vector)], self._n_dimentions
+    def __and__(self, other: Matrix | int) -> Matrix:
+        if isinstance(other, Matrix):
+            if self._shape == other._shape:
+                return Matrix(
+                    [[a&b for a,b in zip(row_self, row_other)]
+                     for row_self, row_other in zip(self._matrix, other._matrix)],
+                    self._n_rows,
+                    self._n_cols
                 )
             raise ValueError
         if isinstance(other, int):
-            return Vector([v & other for v in self._vector], self._n_dimentions)
+            return Matrix(
+                [[v&other for v in row] for row in self._matrix],
+                self._n_rows,
+                self._n_cols
+            )
         return NotImplemented
 
-    def __rand__(self, other: int) -> Vector:
+    def __rand__(self, other: int) -> Matrix:
         return self.__and__(other)
 
-    def __or__(self, other: Vector | int) -> Vector:
-        if isinstance(other, Vector):
-            if self._n_dimentions == other._n_dimentions:
-                return Vector(
-                    [a | b for a, b in zip(
-                        self._vector, other._vector)], self._n_dimentions
+    def __or__(self, other: Matrix | int) -> Matrix:
+        if isinstance(other, Matrix):
+            if self._shape == other._shape:
+                return Matrix(
+                    [[a|b for a,b in zip(row_self, row_other)]
+                     for row_self, row_other in zip(self._matrix, other._matrix)],
+                    self._n_rows,
+                    self._n_cols
                 )
             raise ValueError
         if isinstance(other, int):
-            return Vector([v | other for v in self._vector], self._n_dimentions)
+            return Matrix(
+                [[v|other for v in row] for row in self._matrix],
+                self._n_rows,
+                self._n_cols
+            )
         return NotImplemented
 
-    def __ror__(self, other: int) -> Vector:
+    def __ror__(self, other: int) -> Matrix:
         return self.__or__(other)
 
-    def __xor__(self, other: Vector | int) -> Vector:
-        if isinstance(other, Vector):
-            if self._n_dimentions == other._n_dimentions:
-                return Vector(
-                    [a ^ b for a, b in zip(
-                        self._vector, other._vector)], self._n_dimentions
+    def __xor__(self, other: Matrix | int) -> Matrix:
+        if isinstance(other, Matrix):
+            if self._shape == other._shape:
+                return Matrix(
+                    [[a^b for a,b in zip(row_self, row_other)]
+                     for row_self, row_other in zip(self._matrix, other._matrix)],
+                    self._n_rows,
+                    self._n_cols
                 )
             raise ValueError
         if isinstance(other, int):
-            return Vector([v ^ other for v in self._vector], self._n_dimentions)
+            return Matrix(
+                [[v^other for v in row] for row in self._matrix],
+                self._n_rows,
+                self._n_cols
+            )
         return NotImplemented
 
-    def __rxor__(self, other: int) -> Vector:
+    def __rxor__(self, other: int) -> Matrix:
         return self.__xor__(other)
 
-    def __rshift__(self, other: int) -> Vector:
+    def __rshift__(self, other: int) -> Matrix:
         if isinstance(other, int):
-            return Vector([v >> other for v in self._vector], self._n_dimentions)
+            return Matrix(
+                [[v >> other for v in row] for row in self._matrix],
+                self._n_rows,
+                self._n_cols
+            )
         return NotImplemented
 
-    def __lshift__(self, other: int) -> Vector:
+    def __lshift__(self, other: int) -> Matrix:
         if isinstance(other, int):
-            return Vector([v << other for v in self._vector], self._n_dimentions)
+            return Matrix(
+                [[v << other for v in row] for row in self._matrix],
+                self._n_rows,
+                self._n_cols
+            )
         return NotImplemented
 
-    def __neg__(self) -> Vector:
-        return Vector([-v for v in self._vector], self._n_dimentions)
+    def __neg__(self) -> Matrix:
+        return Matrix(
+            [[-v for v in row] for row in self._matrix],
+            self._n_rows,
+            self._n_cols
+        )
 
-    def __pos__(self) -> Vector:
-        return Vector(self._vector.copy(), self._n_dimentions)
+    def __pos__(self) -> Matrix:
+        return Matrix(copy.deepcopy(self._matrix), self._n_rows, self._n_cols)
 
-    def __invert__(self) -> Vector:
-        return Vector([~v for v in self._vector], self._n_dimentions)
+    def __invert__(self) -> Matrix:
+        return Matrix(
+            [[~v for v in row] for row in self._matrix],
+            self._n_rows,
+            self._n_cols
+        )
 
     def __iadd__(self, other: Vector | int | float) -> Vector:
         if isinstance(other, Vector):
