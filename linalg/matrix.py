@@ -492,116 +492,135 @@ class Matrix:
             self._n_cols
         )
 
-    def __iadd__(self, other: Vector | int | float) -> Vector:
-        if isinstance(other, Vector):
-            if self._n_dimentions == other._n_dimentions:
-                for i, _ in enumerate(self._vector):
-                    self._vector[i] += other._vector[i]
+    def __iadd__(self, other: Matrix | int | float) -> Matrix:
+        if isinstance(other, Matrix):
+            if self._shape == other._shape:
+                for i, _ in enumerate(self._matrix):
+                    for j, _ in enumerate(self._matrix[i]):
+                        self._matrix[i][j] += other._matrix[i][j]
                 return self
-            raise ValueError
+            raise ValueError("Matrix shape mismatch.")
         if isinstance(other, (int, float)):
-            for i, _ in enumerate(self._vector):
-                self._vector[i] += other
+            for i, _ in enumerate(self._matrix):
+                for j, _ in enumerate(self._matrix[i]):
+                    self._matrix[i][j] += other
             return self
         raise ValueError
 
-    def __isub__(self, other: Vector | int | float) -> Vector:
-        if isinstance(other, Vector):
-            if self._n_dimentions == other._n_dimentions:
-                for i, _ in enumerate(self._vector):
-                    self._vector[i] -= other._vector[i]
+    def __isub__(self, other: Matrix | int | float) -> Matrix:
+        if isinstance(other, Matrix):
+            if self._shape == other._shape:
+                for i, _ in enumerate(self._matrix):
+                    for j, _ in enumerate(self._matrix[i]):
+                        self._matrix[i][j] -= other._matrix[i][j]
                 return self
             raise ValueError
         if isinstance(other, (int, float)):
-            for i, _ in enumerate(self._vector):
-                self._vector[i] -= other
+            for i, _ in enumerate(self._matrix):
+                for j, _ in enumerate(self._matrix[i]):
+                    self._matrix[i][j] -= other
             return self
         raise ValueError
 
-    def __imul__(self, other: int | float) -> Vector:
+    def __imul__(self, other: int | float) -> Matrix:
         if isinstance(other, (int | float)):
-            for i, _ in enumerate(self._vector):
-                self._vector[i] *= other
+            for i, _ in enumerate(self._matrix):
+                for j, _ in enumerate(self._matrix[i]):
+                    self._matrix[i][j] *= other
         raise ValueError
 
-    def __itruediv__(self, other: int | float) -> Vector:
-        if isinstance(other, (int | float)):
-            if other != 0:
-                for i, _ in enumerate(self._vector):
-                    self._vector[i] /= other
-        raise ValueError
-
-    def __imod__(self, other: int | float) -> Vector:
+    def __itruediv__(self, other: int | float) -> Matrix:
         if isinstance(other, (int | float)):
             if other != 0:
-                for i, _ in enumerate(self._vector):
-                    self._vector[i] %= other
+                for i, _ in enumerate(self._matrix):
+                    for j, _ in enumerate(self._matrix[i]):
+                        self._matrix[i][j] /= other
         raise ValueError
 
-    def __ifloordiv__(self, other: int | float) -> Vector:
+    def __imod__(self, other: int | float) -> Matrix:
         if isinstance(other, (int | float)):
             if other != 0:
-                for i, _ in enumerate(self._vector):
-                    self._vector[i] //= other
+                for i, _ in enumerate(self._matrix):
+                    for j, _ in enumerate(self._matrix[i]):
+                        self._matrix[i][j] %= other
         raise ValueError
 
-    def __ipow__(self, other: int | float) -> Vector:
+    def __ifloordiv__(self, other: int | float) -> Matrix:
         if isinstance(other, (int | float)):
-            for i, _ in enumerate(self._vector):
-                self._vector[i] **= other
+            if other != 0:
+                for i, _ in enumerate(self._matrix):
+                    for j, _ in enumerate(self._matrix[i]):
+                        self._matrix[i][j] //= other
         raise ValueError
 
-    def __iand__(self, other: int) -> Vector:
-        if isinstance(other, int):
-            for i, _ in enumerate(self._vector):
-                self._vector[i] &= other
+    def __ipow__(self, other: int | float) -> Matrix:
+        if isinstance(other, (int | float)):
+            for i, _ in enumerate(self._matrix):
+                for j, _ in enumerate(self._matrix[i]):
+                    self._matrix[i][j] **= other
         raise ValueError
 
-    def __ior__(self, other: int) -> Vector:
+    def __iand__(self, other: int) -> Matrix:
         if isinstance(other, int):
-            for i, _ in enumerate(self._vector):
-                self._vector[i] |= other
+            for i, _ in enumerate(self._matrix):
+                for j, _ in enumerate(self._matrix[i]):
+                    self._matrix[i][j] &= other
         raise ValueError
 
-    def __ixor__(self, other: int) -> Vector:
+    def __ior__(self, other: int) -> Matrix:
         if isinstance(other, int):
-            for i, _ in enumerate(self._vector):
-                self._vector[i] ^= other
+            for i, _ in enumerate(self._matrix):
+                for j, _ in enumerate(self._matrix[i]):
+                    self._matrix[i][j] |= other
         raise ValueError
 
-    def __irshift__(self, other: int) -> Vector:
+    def __ixor__(self, other: int) -> Matrix:
         if isinstance(other, int):
-            for i, _ in enumerate(self._vector):
-                self._vector[i] >>= other
+            for i, _ in enumerate(self._matrix):
+                for j, _ in enumerate(self._matrix[i]):
+                    self._matrix[i][j] ^= other
         raise ValueError
 
-    def __ilshift__(self, other: int) -> Vector:
+    def __irshift__(self, other: int) -> Matrix:
         if isinstance(other, int):
-            for i, _ in enumerate(self._vector):
-                self._vector[i] <<= other
+            for i, _ in enumerate(self._matrix):
+                for j, _ in enumerate(self._matrix[i]):
+                    self._matrix[i][j] >>= other
+        raise ValueError
+
+    def __ilshift__(self, other: int) -> Matrix:
+        if isinstance(other, int):
+            for i, _ in enumerate(self._matrix):
+                for j, _ in enumerate(self._matrix[i]):
+                    self._matrix[i][j] <<= other
         raise ValueError
 
     def __getattribute__(self, name: str) -> Any:
         return object.__getattribute__(self, name)
 
-    def __getattr__(self, name: str) -> Any:
-        mapping = {"x": 0, "y": 1, "z": 2}
-        if name in mapping:
-            return self._vector[mapping[name]]
+    def __getattr__(self, name: str) -> Vector:
+        """
+        Columns aren't stored directly, so m.c0 accesses 
+        first column of matrix and returns it as Vector
+        """
+        if name.startswith("c") and name[1:].isdigit():
+            idx = int(name[1:])
+            if 0 <= idx < self._n_cols:
+                return Vector([row[idx] for row in self._matrix], self._n_rows)
         raise AttributeError(name)
 
     def __setattr__(self, name: str, value) -> None:
-        if name == "_n_dimentions":
+        if name in ("_shape", "_n_rows", "_n_cols"):
             raise AttributeError("read only attribute")
         object.__setattr__(self, name, value)
 
     def __delattr__(self, name: str) -> None:
-        if name == "_vector":
+        if name == "_matrix":
             raise AttributeError("cannot delete core data")
         object.__delattr__(self, name)
 
     def __dir__(self) -> list[str]:
-        return super().__dir__() + ["x", "y", "z"]
+        return super().__dir__() + [f"c{col}" for col in range(self._n_cols)]
 
     async def __aenter__(self):
         return self
@@ -609,26 +628,27 @@ class Matrix:
     async def __aexit__(self, exc_type, exc, tb):
         pass
 
-    class _AsyncVectorIter:
-        def __init__(self, vector: Sequence[float], n_dimentions: int) -> None:
-            self._n_dimentions = n_dimentions
-            self._vector = vector
+    class _AsyncMatrixIter:
+        def __init__(self, matrix: Sequence[Sequence[float]], n_rows: int, n_cols: int) -> None:
+            self._n_rows = n_rows
+            self._n_cols = n_cols
+            self._matrix = matrix
             self._i = 0
 
-        def __aiter__(self) -> Vector._AsyncVectorIter:
+        def __aiter__(self) -> Matrix._AsyncMatrixIter:
             return self
 
         async def __anext__(self) -> float:
-            if self._i >= self._n_dimentions:
+            if self._i >= self._n_rows:
                 raise StopAsyncIteration
 
             await asyncio.sleep(0)
-            value = self._vector[self._i]
+            value = self._matrix[self._i]
             self._i += 1
             return value
 
-    def __aiter__(self) -> _AsyncVectorIter:
-        return self._AsyncVectorIter(self._vector, self._n_dimentions)
+    def __aiter__(self) -> _AsyncMatrixIter:
+        return self._AsyncMatrixIter(self._matrix, self._n_rows, self._n_cols)
 
     def __await__(self):
         async def _wrap():
