@@ -5,10 +5,12 @@ This module is a container for Vector class.
 from __future__ import annotations
 import struct
 from collections.abc import Iterator
-from typing import Sequence, Any
+from typing import Sequence, Any, TYPE_CHECKING
 import asyncio
-from .matrix import Matrix
+if TYPE_CHECKING:
+    from .matrix import Matrix
 
+# pylint: disable=import-outside-toplevel
 
 class Vector:
     """
@@ -125,7 +127,7 @@ class Vector:
             self._old_precision: int = None
 
         def __enter__(self) -> Vector:
-            self._old_precision = self._precision
+            self._old_precision = self._vector_object._precision
             self._vector_object._precision = self._precision
             return self._vector_object
 
@@ -254,6 +256,8 @@ class Vector:
             raise ValueError
         if isinstance(other, (int, float)):
             return Vector([v*other for v in self._vector], self._n_dimentions)
+        # To avoid circular imports between vector.py and matrix.py
+        from .matrix import Matrix
         if isinstance(other, Matrix):
             vector_list = []
             for i in range(other._n_columns):
@@ -452,7 +456,8 @@ class Vector:
 
     def __setattr__(self, name: str, value) -> None:
         if name == "_n_dimentions":
-            raise AttributeError("read only attribute")
+            if hasattr(self, "_n_dimentions"):
+                raise AttributeError("read only attribute")
         object.__setattr__(self, name, value)
 
     def __delattr__(self, name: str) -> None:
