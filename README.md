@@ -1,5 +1,5 @@
 # MagicMethods
-The goal of this project is to learn and practice Python magic methods by building a small but functional math engine with vectors and matrices. It explores operator overloading, custom containers, iteration, indexing, comparisons, and other dunder methods through practical, incremental features and experiments. After implementation of all dunder methods the correctness was tested using many among the most popular python testing frameworks in order to discover new and practice already known before.
+The goal of this project is to learn and practice Python magic methods by building a small but functional math engine with vectors and matrices. It explores operator overloading, custom containers, iteration, indexing, comparisons, and other dunder methods through practical, incremental features and experiments. After implementation of all dunder methods the correctness was tested using some among the most popular python testing frameworks in order to discover new and practice already known before (behave, pytest, pyunit).
 
 Learning sources:
 https://www.pythonmorsels.com/every-dunder-method/
