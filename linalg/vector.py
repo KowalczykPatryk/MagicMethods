@@ -269,9 +269,9 @@ class Vector:
         from .matrix import Matrix
         if isinstance(other, Matrix):
             vector_list = []
-            for i in range(other._n_columns):
-                vector_list[i] = sum(
-                    a*b for a, b in zip(self._vector, other.column[i]))
+            for i in range(other._n_cols):
+                vector_list.append(sum(
+                    a*b for a, b in zip(self._vector, getattr(other, f"c{i}"))))
             return Vector(vector_list, len(vector_list))
         return NotImplemented
 

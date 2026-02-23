@@ -5,6 +5,7 @@ import math
 import struct
 import pytest
 from linalg.vector import Vector
+from linalg.matrix import Matrix
 
 #pylint: disable=unnecessary-dunder-call
 
@@ -224,3 +225,85 @@ def test_iterator_length_hint():
     next(iterator)
 
     assert iterator.__length_hint__() == 0
+
+@pytest.mark.parametrize("a, start_selector, end_selector, expected", [
+    ([1,2,3,4], 0, 2, [1,2]),
+    ([1,2,3,4], 1, 2, [2]),
+    ([1,2,3,4], 0, 4, [1,2,3,4]),
+])
+def test_getitem_slice(a, start_selector, end_selector, expected):
+    """
+    Test for slicing part of the vector
+    """
+    assert Vector(a, len(a))[start_selector: end_selector] == Vector(expected, len(expected))
+
+@pytest.mark.parametrize("a, index, expected", [
+    ([1,2,3,4], 0, 1),
+    ([1,2,3,4], 1, 2),
+    ([1,2,3,4], 2, 3),
+])
+def test_getitem_index(a, index, expected):
+    """
+    Test for indexing part of the vector
+    """
+    assert Vector(a, len(a))[index] == expected
+
+@pytest.mark.parametrize("a, start_selector, end_selector, b, expected", [
+    ([1,2,3,4,5], 1, 3, [6, 7], [1, 6, 7, 4, 5]),
+    ([1,2,3,4,5], 0, 4, [6, 7, 8, 9], [6, 7, 8, 9, 5]),
+])
+def test_setitem_slice(a, start_selector, end_selector, b, expected):
+    """
+    Test __setitem__ when slice selector
+    """
+    vector = Vector(a, len(a))
+    vector[start_selector: end_selector] = b
+    assert vector == Vector(expected, len(expected))
+
+@pytest.mark.parametrize("a, start_selector, end_selector, b", [
+    ([1,2,3,4,5], 1, 3, [6, 7, 8]),
+    ([1,2,3,4,5], 0, 4, [6, 7]),
+])
+def test_setitem_except(a, start_selector, end_selector, b):
+    """
+    Test __setitem when slice selector might change dimention
+    """
+    with pytest.raises(ValueError):
+        Vector(a, len(a))[start_selector: end_selector] = b
+
+@pytest.mark.parametrize("value, test_list, expected", [
+    (4, [2,3,4], True),
+    (4, [2,3,5], False),
+])
+def test_contains(value, test_list, expected):
+    """
+    Test __contains__ dunder method
+    """
+    assert (value in Vector(test_list, len(test_list))) == expected
+
+@pytest.mark.parametrize("a, b , expected", [
+    ([1,2,3], [1,2,3], [2,4,6]),
+    ([1.0, 2.5, 3.4], [1.4, 3.2, 7.2], [2.4, 5.7, 10.6]),
+])
+def test_add_vector(a, b, expected):
+    """
+    Test add vector to other vector
+    """
+    assert Vector(a, len(a)) + Vector(b, len(b)) == Vector(expected, len(expected))
+
+@pytest.mark.parametrize("a, b , expected", [
+    ([1,2,3], 2, [3,4,5]),
+    ([1.0, 2.5, 3.4], 3.1, [4.1, 5.6, 6.5]),
+])
+def test_add_float(a, b, expected):
+    """
+    Test add vector to other vector
+    """
+    assert Vector(a, len(a)) + b == Vector(expected, len(expected))
+
+
+def test_mul_matrix():
+    """
+    Test vector * matrix operation
+    """
+    assert Vector([1,2,3], 3) * Matrix([[1,2,3],[4,5,6],[7,8,9]], 3, 3) == Vector([30, 36, 42], 3)

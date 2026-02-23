@@ -611,7 +611,8 @@ class Matrix:
 
     def __setattr__(self, name: str, value) -> None:
         if name in ("_shape", "_n_rows", "_n_cols"):
-            raise AttributeError("read only attribute")
+            if hasattr(self, name):
+                raise AttributeError("read only attribute")
         object.__setattr__(self, name, value)
 
     def __delattr__(self, name: str) -> None:
