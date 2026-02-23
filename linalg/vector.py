@@ -7,6 +7,7 @@ import struct
 from collections.abc import Iterator
 from typing import Sequence, Any, TYPE_CHECKING
 import asyncio
+import math
 if TYPE_CHECKING:
     from .matrix import Matrix
 
@@ -45,9 +46,9 @@ class Vector:
     def __init__(self, init_list: list[float], n_dimentions: int) -> None:
         if n_dimentions <= 0:
             raise ValueError
-        self._vector: list[float] = init_list
-        for i in range(len(init_list), n_dimentions):
-            self._vector[i] = 0
+        if len(init_list) > n_dimentions:
+            raise ValueError("Initial list longer than dimention")
+        self._vector = list(init_list) + [0] * (n_dimentions - len(init_list))
         self._n_dimentions: int = n_dimentions
 
     def __repr__(self) -> str:
@@ -73,23 +74,31 @@ class Vector:
         :return: norm of the vector
         :rtype: float
         """
-        return sum(v*v for v in self._vector) ** 2
+        return math.sqrt(sum(v*v for v in self._vector))
 
     def __lt__(self, other: Vector) -> bool:
+        if math.isclose(self.norm(), other.norm(), rel_tol=1e-14):
+            return False
         return self.norm() < other.norm()
 
     def __gt__(self, other: Vector) -> bool:
+        if math.isclose(self.norm(), other.norm(), rel_tol=1e-14):
+            return False
         return not self.__lt__(other)
 
     def __le__(self, other: Vector) -> bool:
+        if math.isclose(self.norm(), other.norm(), rel_tol=1e-14, abs_tol=1e-14):
+            return True
         return self.norm() <= other.norm()
 
     def __ge__(self, other: Vector) -> bool:
-        return not self.__le__(other)
+        if math.isclose(self.norm(), other.norm(), rel_tol=1e-14, abs_tol=1e-14):
+            return True
+        return self.norm() >= other.norm()
 
     def __str__(self) -> str:
         return (
-            f"Vector {self._vector} has {self._n_dimentions}"
+            f"Vector {self._vector} has {self._n_dimentions} "
             f"{'dimention' if self._n_dimentions == 1 else 'dimentions'}"
         )
 
@@ -98,18 +107,18 @@ class Vector:
 
     def __int__(self) -> int:
         if self._n_dimentions == 1:
-            return int(self._vector)
+            return int(self._vector[0])
         raise TypeError("Cannot convert multidimentional Vector to int")
 
     def __float__(self) -> float:
         if self._n_dimentions == 1:
-            return float(self._vector)
+            return float(self._vector[0])
         raise TypeError("Cannot convert multidimentional Vector to float")
 
     def __bytes__(self) -> bytes:
         return (
             struct.pack("I", self._n_dimentions)+
-            "".join(struct.pack("d", v) for v in self._vector).encode()
+            b"".join(struct.pack("d", v) for v in self._vector)
         )
 
     def __complex__(self) -> complex:
